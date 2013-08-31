@@ -1,0 +1,105 @@
+#!/bin/bash
+
+#
+# Check devices for blank video and power on the device if it appears 
+# there are only blank black frames from the STB.
+#
+# Based on check_stb with modifications to support multiple video devices.
+# http://evuraan.blogspot.com/2008/01/how-to-ensure-set-top-box-stb-is.html
+#
+# ABSOLUTELY NO WARRANTY, to the extent permitted by applicable law.
+#
+# YMMV.
+# Use at your own risk.
+#
+
+####
+#### Configuration
+####
+
+#
+# A space separated list of video devices to check.
+#
+pvr_list="/dev/video0 /dev/video1 /dev/video2 /dev/video3"
+
+#
+# Uncomment the appropriate line depending on where you
+# want the output directed.
+#
+say="/bin/echo"
+#say="/usr/bin/logger -p info -t blank_check"
+
+#
+# The command used to send the power on command to the STB.
+# Set this to whatever is appropriate for your setup.
+# The video device will be passed as the first argument.
+#
+power_on=""
+
+####
+#### End configuration
+####
+
+dir="/tmp/blank_check-$RANDOM-$RANDOM"
+video="$dir/out.mpg"
+mark="1700"
+
+send_power_on() {
+    $say "Sending power on to $1"
+    $power_on "$1"
+}
+
+#
+# Check the sequence of jpeg images for blank and non-blank
+# frames and send power on if all frames are blank.
+#
+scan_images() {
+    local blank="0"
+    local DO_POWEROFF="0"
+    local DO_POWERON="0"
+
+    for i in `echo $dir/frame*.jpeg`; do
+        if [ -s "$i" ]; then
+            blank="`jp2a $i --invert --size=72x24 | sed -e 's/W/M/g' -e 's/./& \n/g' | grep -c "M"`"
+        fi
+        rm -f "$i" >/dev/null 2>/dev/null
+
+        [ "$blank" -gt "$mark" ] && export DO_POWERON="100"
+        [ "$blank" -le "$mark" ] && export DO_POWEROFF="100"
+    done
+
+    if [ "$DO_POWERON" -eq "100" -a "$DO_POWEROFF" -ne "100" ]; then
+        # Some blank frames, no non-blank frames - STB is off
+        $say "`date` STB for $1 seems to be turned off, last count was $blank, attempting to Power it on"
+        send_power_on $1
+    else
+        # Any non-blank frames - STB is on
+        $say "`date` STB $1 seems to be turned on, last count was $blank"
+    fi
+}
+
+clean_up_dir() {
+    rm -f "$dir/frame*.jpeg" >/dev/null 2>/dev/null
+    [ -f "$video" ] && rm -f "$video" >/dev/null 2>/dev/null
+}
+
+#
+# Loop through each PVR device, pulling a few frames of video
+# and checking whether they appear blank or not.
+#
+mkdir $dir
+for pvr in $pvr_list; do
+
+    dd if="$pvr" of="$video" bs=64K count=10  >/dev/null 2>/dev/null
+
+    if [ -s "$video" ]; then
+        ffmpeg -i $video -f image2 -vcodec mjpeg "$dir/frame%d.jpeg" >/dev/null 2>/dev/null 
+        [ -s "$dir/frame1.jpeg" ] && scan_images $pvr
+    else
+        $say "`date` Unable to query $pvr, as it seems to be in use."
+    fi
+    
+    clean_up_dir
+done
+[ -d "$dir" ] && rmdir "$dir"
+
