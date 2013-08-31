@@ -24,6 +24,11 @@ My main modification to his script was to support multiple video devices.
 * Make sure `jp2a` and `ffmpeg` are installed on your system
 * Download `blank_check`
 * Make it executable (`chmod 644 blank_check`)
-* Edit the three items in the Configuration section at the top of the script for your installation
+* Edit the three items in the Configuration section at the top of the script for your installation. You will need to:
+ * Update the space separated list of video devices to match the ones on your system
+ * Choose to log to the console or syslog
+ * Supply a command that will send the power on command to an STB in your environment. The video device is
+   passed as the first argument to this command and can be used by the script to determine which device
+   needs to be powered on.
 * Add to cron to check periodically
 
