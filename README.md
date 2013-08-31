@@ -12,7 +12,7 @@ power on command to the STB.
 I've generally found this useful to run via cron at 25 and 55 minutes after the hour, so that the STB
 is checked right before a recording may start. If the video device is already in use it will
 just skip the check. Don't run this script as root - use another user who can read from the video devices.
-On some sytems any user in the `video` group can do this.
+On some Linux distros any user in the `video` group can do this.
 
 Thanks to Evuraan who came up with this idea.
 See his blog entry and `check_stb` script: [How to ensure Set-Top-Box (STB) is Powered On?](http://evuraan.blogspot.com/2008/01/how-to-ensure-set-top-box-stb-is.html) for details.
