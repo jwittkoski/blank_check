@@ -1,6 +1,6 @@
-#Power on STBs with blank video
+# Power on STBs with blank video
 
-##Description
+## Description
 
 If you have a PVR like SageTV or MythTV where you are recording from Set Top Boxes (STBs) that
 you rent from your cable company, you know there are times when the STB powers itself down due
@@ -19,7 +19,7 @@ See his blog entry and `check_stb` script: [How to ensure Set-Top-Box (STB) is P
 
 My main modification to his script was to support multiple video devices.
 
-##Installation
+## Installation
 
 * Make sure `jp2a` and `ffmpeg` are installed on your system
 * Download `blank_check`
